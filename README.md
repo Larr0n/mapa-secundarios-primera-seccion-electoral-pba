@@ -1,6 +1,6 @@
 # Mapa de Secundarios - Primera Sección Electoral (PBA)
 
-Plataforma web minimalista y estética para visualizar, filtrar y analizar datos de establecimientos educativos de nivel secundario en la Primera Sección Electoral de la Provincia de Buenos Aires. Diseñado para facilitar la toma de decisiones políticas y el análisis territorial.
+Plataforma para visualizar, filtrar y analizar datos de establecimientos educativos de nivel secundario en la Primera Sección Electoral de la Provincia de Buenos Aires. Diseñado para facilitar la toma de decisiones políticas y el análisis territorial.
 
 **Creado por:** [Pedro Larrondo](https://www.instagram.com/pedro.larrond0/)
 
@@ -16,7 +16,7 @@ Plataforma web minimalista y estética para visualizar, filtrar y analizar datos
 - **Exportación a Excel (.xlsx)** automatizada, conservando filtros, formateo de tabla y ordenamiento de datos mediante ExcelJS.
 - **Estadísticas en tiempo real** (cantidad de establecimientos, matrícula total, municipios involucrados).
 - **Panel lateral** con listado de establecimientos sincronizado bidireccionalmente con el mapa.
-- **Diseño UI/UX renovado** con tipografías personalizadas (Poppins, Roboto, Courier New) y una paleta de colores institucional sólida (#39195b).
+- **Diseño UI/UX renovado** con tipografías personalizadas (Poppins, Roboto, Courier New) y una paleta de colores institucional (#39195b).
 - **Popups informativos unificados** con detalles exactos de cada establecimiento (Modalidad, Matrícula, Varones/Mujeres, etc.).
 
 ## 📁 Estructura del Proyecto
@@ -24,13 +24,17 @@ Plataforma web minimalista y estética para visualizar, filtrar y analizar datos
 ```text
 .
 ├── index.html                              # Página principal y lógica de la aplicación
+├── EDA_Secundarios_Primera_Sección.ipynb   # Archivo para limpieza de csv original y un pequeño análisis exploratorio
 ├── Dataset/
-│   ├── dataset_filtrado.csv                # Base de datos procesada de secundarios
+│   ├── dataset_filtrado.csv                # Base de datos procesada (secundarios de la primera sección)
+│   ├── dataset.csv                         # Base de datos de todas las secundarias de PBA
 │   └── municipios_seleccionados.geojson    # Polígonos con límites administrativos
 ├── Recursos/
 │   └── icon.ico                            # Ícono de la pestaña del navegador
+├── Gráficos/                               # Algunos gráficos derivados del EDA
+│   
 └── README.md                               # Este archivo de documentación
-
+```
 ## 🛠️ Requisitos
 
 Al ser una aplicación 100% *Client-Side* (Frontend), no requiere bases de datos ni backend complejo. Solo se necesita un navegador web moderno con soporte para:
@@ -44,10 +48,10 @@ Al ser una aplicación 100% *Client-Side* (Frontend), no requiere bases de datos
 ### 1. Clonar el repositorio
 
 ```bash
-git clone [https://github.com/tu-usuario/mapa-educativo-pba.git](https://github.com/tu-usuario/mapa-educativo-pba.git)
+git clone [https://github.com/Larr0n/mapa-secundarios-primera-seccion-electoral-pba]
 cd mapa-educativo-pba
 
-```
+
 
 ### 2. Servir localmente
 
