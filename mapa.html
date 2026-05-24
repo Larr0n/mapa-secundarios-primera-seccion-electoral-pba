@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Secundarios - Primera Sección Electoral</title>
+    <link rel="icon" type="image/x-icon" href="Recursos/icon.ico">
+    
+    <!-- Leaflet CSS para mapas interactivos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Roboto:ital,wght@0,300;0,400&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f8f9fa;
+            color: #2c3e50;
+        }
+
+        /* Contenedor principal */
+        .container {
+            display: flex;
+            height: 100vh;
+            gap: 0;
+        }
+
+        /* Panel lateral izquierdo */
+        .sidebar {
+            width: 320px;
+            background: white;
+            border-right: 1px solid #e0e6ed;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid #e0e6ed;
+            background: #39195b; /* Color firme */
+            color: white;
+        }
+
+        .sidebar-header h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 28px; /* Título significativamente más grande */
+            font-weight: 600;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+
+        .sidebar-header p {
+            font-family: 'Roboto', sans-serif;
+            font-size: 16px; /* Subtítulo más grande */
+            font-weight: 400;
+            color: #e0e6ed;
+            margin-bottom: 12px;
+        }
+
+        .sidebar-header a {
+            font-family: Georgia, serif; /* Fuente distintiva */
+            font-size: 11px; /* Tamaño más pequeño */
+            color: #ffffff; /* Blanco puro para visibilidad total */
+            text-decoration: none;
+            opacity: 0.8; /* Ligeramente transparente en estado normal */
+            transition: opacity 0.2s ease;
+            display: inline-block;
+        }
+
+        .sidebar-header a:hover {
+            opacity: 1; /* Se vuelve 100% visible al pasar el mouse */
+        }
+
+        /* Controles de filtros */
+        .controls {
+            padding: 20px;
+            border-bottom: 1px solid #e0e6ed;
+        }
+
+        .control-group {
+            margin-bottom: 18px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #39195b;
+            margin-bottom: 8px;
+        }
+
+        .control-group input,
+        .control-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dde4e8;
+            border-radius: 6px;
+            font-size: 13px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            outline: none;
+            border-color: #39195b;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .control-group input::placeholder {
+            color: #9ca3af;
+        }
+
+        /* Botones de acción */
+        .button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        button {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid #dde4e8;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+            color: #2c3e50;
+        }
+
+        button:hover {
+            background: #f8f9fa;
+            border-color: #bcc4cc;
+        }
+
+        button.primary {
+            background: #39195b;
+            color: white;
+            border-color: #39195b;
+        }
+
+        button.primary:hover {
+            background: #3b2157;
+        }
+
+        /* Panel de estadísticas */
+        .stats {
+            padding: 20px;
+            border-bottom: 1px solid #e0e6ed;
+            background: #f8f9fa;
+        }
+
+        .stat-item {
+            margin-bottom: 12px;
+        }
+
+        .stat-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #7f8b98;
+            letter-spacing: 0.4px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        /* Lista de establecimientos */
+        .establishments {
+            flex: 1;
+            padding: 0;
+            overflow-y: auto;
+        }
+
+        .establishment-item {
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f3f7;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+        }
+
+        .establishment-item:hover {
+            background: #f8f9fa;
+        }
+
+        .establishment-item.active {
+            background: #f0f3f7;
+        }
+
+        .establishment-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .establishment-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: #2c3e50;
+            flex: 1;
+            line-height: 1.3;
+        }
+
+        .establishment-toggle {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: #39195b;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+
+        .establishment-toggle.open {
+            transform: rotate(90deg);
+        }
+
+        .establishment-details {
+            display: none;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .establishment-details.show {
+            display: block;
+            max-height: 500px;
+            opacity: 1;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid #e0e6ed;
+        }
+
+        .establishment-detail-item {
+            margin-bottom: 8px;
+        }
+
+        .establishment-detail-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #7f8b98;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+
+        .detail-value {
+            font-size: 12px;
+            color: #2c3e50;
+            margin-top: 2px;
+            word-break: break-word;
+        }
+
+        /* Card de detalles flotante */
+        .detail-card {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 320px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border: 1px solid #e0e6ed;
+            max-height: 60vh;
+            overflow-y: auto;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .detail-card.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .detail-card-header {
+            padding: 16px;
+            border-bottom: 1px solid #e0e6ed;
+            background: #39195b; /* Color firme */
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .detail-card-title {
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1.3;
+            flex: 1;
+        }
+
+        .detail-card-close {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+            flex-shrink: 0;
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .detail-card-close:hover {
+            opacity: 1;
+        }
+
+        .detail-card-content {
+            padding: 16px;
+        }
+
+        .detail-card-field {
+            margin-bottom: 12px;
+        }
+
+        .detail-card-field:last-child {
+            margin-bottom: 0;
+        }
+
+        .detail-card-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #7f8b98;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+            margin-bottom: 4px;
+        }
+
+        .detail-card-value {
+            font-size: 13px;
+            color: #2c3e50;
+            word-break: break-word;
+            line-height: 1.4;
+        }
+
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #9ca3af;
+            font-size: 13px;
+        }
+
+        /* Mapa principal */
+        #map {
+            flex: 1;
+            z-index: 1;
+        }
+
+        /* Estilos de popup del mapa */
+        .leaflet-popup-content-wrapper {
+            padding: 0;
+            overflow: hidden;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            border: none;
+        }
+
+        .leaflet-popup-content {
+            margin: 0;
+            width: 320px !important; /* Mismo ancho que tenía la tarjeta flotante */
+            font-family: inherit;
+        }
+
+        /* Cambiamos el color de la X de cerrar para que se vea sobre el fondo morado */
+        .leaflet-popup-close-button {
+            color: white !important;
+            padding: 12px 12px 0 0 !important;
+            font-size: 18px !important;
+            z-index: 10;
+        }
+
+        .leaflet-popup-close-button:hover {
+            color: #f0f3f7 !important;
+            background: transparent !important;
+        }
+
+        .seccion-tooltip {
+            background: #667eea !important;
+            border: none !important;
+            color: white !important;
+            padding: 6px 10px !important;
+            border-radius: 4px !important;
+            font-weight: 500 !important;
+        }
+
+        .popup-title {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 8px;
+            color: #667eea;
+        }
+
+        .popup-field {
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .popup-label {
+            font-weight: 500;
+            color: #7f8b98;
+        }
+
+        .popup-value {
+            color: #2c3e50;
+            font-weight: 500;
+        }
+
+        /* Responsivo */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                max-height: 40vh;
+                border-right: none;
+                border-bottom: 1px solid #e0e6ed;
+            }
+
+            #map {
+                flex: 1;
+            }
+        }
+
+        /* Scrollbar personalizado */
+        .sidebar::-webkit-scrollbar,
+        .establishments::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar::-webkit-scrollbar-track,
+        .establishments::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb,
+        .establishments::-webkit-scrollbar-thumb {
+            background: #d0d7e0;
+            border-radius: 3px;
+        }
+
+        .sidebar::-webkit-scrollbar-thumb:hover,
+        .establishments::-webkit-scrollbar-thumb:hover {
+            background: #b0b7c0;
+        }
+        /* Botón de descarga de Excel */
+        .btn-excel {
+            width: 100%;
+            margin-top: 10px;
+            background: #27ae60;
+            color: white;
+            border-color: #27ae60;
+            font-weight: 600;
+        }
+
+        .btn-excel:hover {
+            background: #219653;
+            border-color: #219653;
+            color: white;
+        }
+
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Panel lateral con controles y listado -->
+        <div class="sidebar">
+            <!-- Encabezado -->
+            <div class="sidebar-header">
+                <h1>Mapa de Secundarios</h1>
+                <p>Primera Sección Electoral - PBA</p>
+                <a href="https://www.instagram.com/pedro.larrond0/" target="_blank">Creado por Pedro Larrondo</a>
+            </div>
+
+            <!-- Controles de filtrado -->
+            <div class="controls">
+                <!-- Búsqueda por nombre de establecimiento -->
+                <div class="control-group">
+                    <label for="searchInput">Establecimiento</label>
+                    <input 
+                        type="text" 
+                        id="searchInput" 
+                        placeholder="Buscar por nombre..."
+                        autocomplete="off"
+                    >
+                </div>
+
+                <!-- Filtro por municipio -->
+                <div class="control-group">
+                    <label for="municipioSelect">Municipio</label>
+                    <select id="municipioSelect">
+                        <option value="">Todos los municipios</option>
+                    </select>
+                </div>
+
+
+
+                <!-- Botones de acción -->
+                <div class="button-group">
+                    <button class="primary" id="applyFilters">Aplicar</button>
+                    <button id="resetFilters">Limpiar</button>
+                </div>
+                <button id="downloadExcel" class="btn-excel">Descargar Excel</button>
+            </div>
+
+            <!-- Estadísticas resumidas -->
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">Establecimientos</div>
+                    <div class="stat-value" id="totalEstablishments">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Matrícula Total</div>
+                    <div class="stat-value" id="totalMatricula">0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">Municipios</div>
+                    <div class="stat-value" id="totalMunicipios">0</div>
+                </div>
+            </div>
+
+            <!-- Listado de establecimientos filtrados -->
+            <div class="establishments" id="establishmentsList">
+                <div class="empty-state">Cargando datos...</div>
+            </div>
+        </div>
+
+        <!-- Mapa interactivo -->
+        <div id="map"></div>
+
+        <!-- Card flotante de detalles -->
+        <div id="detailCard" class="detail-card">
+            <div class="detail-card-header">
+                <div class="detail-card-title" id="detailCardTitle">Detalles</div>
+                <div class="detail-card-close" onclick="closeDetailCard()">✕</div>
+            </div>
+            <div class="detail-card-content" id="detailCardContent">
+            </div>
+        </div>
+    </div>
+
+    <!-- Leaflet JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+    <script>
+        /**
+         * CONFIGURACIÓN INICIAL
+         * Municipios que integran la Primera Sección Electoral de la Provincia de Buenos Aires
+         */
+        const MUNICIPIOS_SECCION_1 = [
+            'Campana', 'Escobar', 'General Las Heras', 'General Rodríguez',
+            'General San Martín', 'Hurlingham', 'Ituzaingó', 'José C. Paz',
+            'Luján', 'Malvinas Argentinas', 'Marcos Paz', 'Mercedes',
+            'Merlo', 'Moreno', 'Morón', 'Navarro', 'Pilar', 'San Fernando',
+            'San Isidro', 'San Miguel', 'Suipacha', 'Tigre', 'Tres de Febrero',
+            'Vicente López'
+        ];
+
+        /**
+         * LÍMITES DE LA PRIMERA SECCIÓN ELECTORAL
+         * Coordenadas que definen el polígono de la sección electoral
+         */
+        const SECCION_1_BOUNDS = [
+            [-34.14, -59.30],  // Noroeste
+            [-34.14, -58.35],  // Noreste
+            [-35.10, -58.35],  // Sureste
+            [-35.10, -59.30],  // Suroeste
+            [-34.14, -59.30]   // Cierre del polígono
+        ];
+
+        /**
+         * VARIABLES GLOBALES
+         */
+        let map = null;
+        let allData = [];
+        let filteredData = [];
+        let markersLayer = null;
+        let selectedMarker = null;
+
+        /**
+         * PALETA DE COLORES
+         * Colores para representar diferentes niveles educativos
+         */
+        const colorMap = {
+            'Inicial': '#667eea',
+            'Primario': '#764ba2',
+            'Secundario': '#f093fb',
+            'Superior': '#4facfe',
+            'Especial': '#43e97b',
+            'Adultos': '#fa709a',
+            'default': '#95a5a6'
+        };
+
+        /**
+         * Inicializa el mapa con Leaflet
+         * Centro aproximado de la Sección Electoral 1 (coordenadas de la provincia)
+         */
+        function initMap() {
+            map = L.map('map').setView([-34.45, -58.75], 10);
+
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '© OpenStreetMap, © CartoDB',
+                maxZoom: 18
+            }).addTo(map);
+
+            markersLayer = L.featureGroup().addTo(map);
+        }
+
+        async function loadData() {
+            try {
+                const response = await fetch('Dataset/dataset_filtrado.csv');
+                const csv = await response.text();
+                allData = parseCSV(csv);
+                
+                // Los datos ya están filtrados, no necesita procesamiento adicional
+                
+                // Inicializa opciones de filtros
+                populateFilters();
+                
+                // Dibuja límites de la sección electoral (espera a que complete)
+                await drawSeccionBounds();
+                
+                // Carga el mapa inicial
+                filteredData = [...allData];
+                renderMap();
+                renderList();
+                updateStats();
+
+                console.log(`Datos cargados: ${allData.length} establecimientos`);
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                document.getElementById('establishmentsList').innerHTML = 
+                    '<div class="empty-state">Error al cargar datos. Verifica que dataset_filtrado.csv y municipios_seleccionados.geojson existan.</div>';
+            }
+        }
+
+        /**
+         * Parser CSV simple
+         * Convierte texto CSV a array de objetos
+         */
+        function parseCSV(csv) {
+            const lines = csv.trim().split('\n');
+            
+            // Parser CSV que maneja comillas
+            function parseCSVLine(line) {
+                const values = [];
+                let current = '';
+                let insideQuotes = false;
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    const nextChar = line[i + 1];
+
+                    if (char === '"') {
+                        insideQuotes = !insideQuotes;
+                    } else if (char === ',' && !insideQuotes) {
+                        values.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                values.push(current.trim());
+                return values;
+            }
+
+            const headers = parseCSVLine(lines[0]);
+            
+            const latIndex = headers.findIndex(h => h.toLowerCase() === 'latitud');
+            const lonIndex = headers.findIndex(h => h.toLowerCase() === 'longitud');
+            
+            console.log('Índice latitud:', latIndex, 'Índice longitud:', lonIndex);
+            
+            if (latIndex === -1 || lonIndex === -1) {
+                console.error('No se encontraron columnas latitud/longitud');
+                return [];
+            }
+            
+            const data = [];
+
+            for (let i = 1; i < lines.length; i++) {
+                if (!lines[i].trim()) continue;
+
+                const values = parseCSVLine(lines[i]);
+                
+                if (values.length <= Math.max(latIndex, lonIndex)) continue;
+                
+                const latitud = parseFloat(values[latIndex]);
+                const longitud = parseFloat(values[lonIndex]);
+
+                if (!isNaN(latitud) && !isNaN(longitud) && 
+                    latitud >= -35.15 && latitud <= -33.90 && 
+                    longitud >= -59.80 && longitud <= -57.90) {
+                    
+                    const obj = {};
+                    headers.forEach((header, index) => {
+                        obj[header] = values[index] || '';
+                    });
+                    
+                    obj.latitud = latitud;
+                    obj.longitud = longitud;
+                    data.push(obj);
+                }
+            }
+
+            console.log(`Total válidas: ${data.length} de ${lines.length - 1}`);
+            return data;
+        }
+        /**
+         * Completa los selectores de filtros con valores únicos
+         */
+        function populateFilters() {
+            // Municipios únicos
+            const municipios = [...new Set(allData.map(d => d.municipio_nombre))].sort();
+            const municipioSelect = document.getElementById('municipioSelect');
+            municipios.forEach(municipio => {
+                const option = document.createElement('option');
+                option.value = municipio;
+                option.textContent = municipio;
+                municipioSelect.appendChild(option);
+            });
+        }
+
+        /**
+         * Dibuja los límites reales de los municipios de la Sección Electoral 1
+         * Carga GeoJSON con las divisiones administrativas exactas
+         */
+        async function drawSeccionBounds() {
+            try {
+                const response = await fetch('Dataset/municipios_seleccionados.geojson');
+                seccionGeoJSON = await response.json();
+                
+                // Crea layer con los límites municipales
+                L.geoJSON(seccionGeoJSON, {
+                    style: {
+                        color: '#667eea',
+                        weight: 2,
+                        opacity: 0.7,
+                        fillColor: '#667eea',
+                        fillOpacity: 0.05
+                    },
+                    onEachFeature: function(feature, layer) {
+                        // Tooltip con nombre del municipio
+                        const municipio = feature.properties.nam || 'Municipio desconocido';
+                        layer.bindTooltip(municipio, {
+                            permanent: false,
+                            direction: 'center',
+                            className: 'seccion-tooltip'
+                        });
+                    }
+                }).addTo(map);
+            } catch (error) {
+                console.error('Error cargando límites municipales:', error);
+            }
+        }
+
+        /**
+         * Renderiza marcadores en el mapa
+         * Cada marcador representa un establecimiento educativo
+         */
+        function renderMap() {
+            markersLayer.clearLayers();
+
+            filteredData.forEach(establishment => {
+                const lat = parseFloat(establishment.latitud);
+                const lng = parseFloat(establishment.longitud);
+
+                if (isNaN(lat) || isNaN(lng)) return;
+
+                // Determina color basado en nivel educativo
+                const color = colorMap[establishment.nivel] || colorMap.default;
+
+                // Crea marcador circular
+                const marker = L.circleMarker([lat, lng], {
+                    pane: 'markerPane',
+                    radius: 6,
+                    fillColor: color,
+                    color: color,
+                    weight: 2,
+                    opacity: 0.8,
+                    fillOpacity: 0.7
+                });
+
+                // Evento de click en marcador
+                marker.on('click', () => {
+                    selectMarker(establishment, marker);
+                });
+
+                // Popup informativo
+                const popupContent = createPopupContent(establishment);
+                marker.bindPopup(popupContent, { maxWidth: 300, className: 'custom-popup' });
+
+                marker.data = establishment;
+                markersLayer.addLayer(marker);
+            });
+
+            // Trae los puntos al frente para que los polígonos no los tapen
+            markersLayer.bringToFront();
+
+            // Mantiene el zoom y centro en la sección electoral sin hacer fitBounds
+            map.setView([-34.50, -58.95], 10);
+        }
+
+        /**
+         * Crea contenido HTML para el popup del mapa (cuadrado al hacer click)
+         */
+        function createPopupContent(establishment) {
+            const matricula = establishment.matricula ? parseInt(establishment.matricula) : 0;
+            const varones = establishment.varones ? parseInt(establishment.varones) : 0;
+            const mujeres = establishment.mujeres ? parseInt(establishment.mujeres) : 0;
+
+            return `
+                <div class="detail-card-header">
+                    <div class="detail-card-title">${establishment.establecimiento_nombre || '-'}</div>
+                </div>
+                <div class="detail-card-content">
+                    <div class="detail-card-field">
+                        <div class="detail-card-label">Modalidad</div>
+                        <div class="detail-card-value">${establishment.modalidad || '-'}</div>
+                    </div>
+                    <div class="detail-card-field">
+                        <div class="detail-card-label">Dirección</div>
+                        <div class="detail-card-value">${establishment.direccion || '-'}</div>
+                    </div>
+                    <div class="detail-card-field">
+                        <div class="detail-card-label">Teléfono</div>
+                        <div class="detail-card-value">${establishment.telefono || '-'}</div>
+                    </div>
+                    <div class="detail-card-field">
+                        <div class="detail-card-label">Email</div>
+                        <div class="detail-card-value">${establishment.email || '-'}</div>
+                    </div>
+                    <div class="detail-card-field">
+                        <div class="detail-card-label">Matrícula Total</div>
+                        <div class="detail-card-value">${matricula.toLocaleString()} estudiantes</div>
+                    </div>
+                    <div class="detail-card-field">
+                        <div class="detail-card-label">Varones</div>
+                        <div class="detail-card-value">${varones.toLocaleString()}</div>
+                    </div>
+                    <div class="detail-card-field">
+                        <div class="detail-card-label">Mujeres</div>
+                        <div class="detail-card-value">${mujeres.toLocaleString()}</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        /**
+         * Selecciona un marcador y lo resalta
+         * Muestra los detalles en una card flotante
+         */
+        function selectMarker(establishment, marker) {
+            // Deselecciona marcador anterior
+            if (selectedMarker) {
+                selectedMarker.setRadius(6);
+                selectedMarker.setStyle({ opacity: 0.8, fillOpacity: 0.7 });
+            }
+
+            // Resalta nuevo marcador
+            marker.setRadius(9);
+            marker.setStyle({ opacity: 1, fillOpacity: 1 });
+            selectedMarker = marker;
+
+            // ¡Acá está la magia! Esto abre el globito (popup) en el mapa
+            marker.openPopup();
+
+            // Actualiza listado lateral para que quede pintado de gris
+            document.querySelectorAll('.establishment-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            const activeItem = document.querySelector(
+                `[data-id="${establishment.establecimiento_id}"]`
+            );
+            if (activeItem) {
+                activeItem.classList.add('active');
+            }
+        }
+
+        /**
+         * Muestra la card flotante con detalles del establecimiento
+         */
+        function showDetailCard(establishment) {
+            const card = document.getElementById('detailCard');
+            const title = document.getElementById('detailCardTitle');
+            const content = document.getElementById('detailCardContent');
+
+            const matricula = establishment.matricula ? parseInt(establishment.matricula) : 0;
+            const varones = establishment.varones ? parseInt(establishment.varones) : 0;
+            const mujeres = establishment.mujeres ? parseInt(establishment.mujeres) : 0;
+
+            title.textContent = establishment.establecimiento_nombre;
+
+            content.innerHTML = `
+                <div class="detail-card-field">
+                    <div class="detail-card-label">Modalidad</div>
+                    <div class="detail-card-value">${establishment.modalidad || '-'}</div>
+                </div>
+                <div class="detail-card-field">
+                    <div class="detail-card-label">Dirección</div>
+                    <div class="detail-card-value">${establishment.direccion || '-'}</div>
+                </div>
+                <div class="detail-card-field">
+                    <div class="detail-card-label">Teléfono</div>
+                    <div class="detail-card-value">${establishment.telefono || '-'}</div>
+                </div>
+                <div class="detail-card-field">
+                    <div class="detail-card-label">Email</div>
+                    <div class="detail-card-value">${establishment.email || '-'}</div>
+                </div>
+                <div class="detail-card-field">
+                    <div class="detail-card-label">Matrícula Total</div>
+                    <div class="detail-card-value">${matricula.toLocaleString()} estudiantes</div>
+                </div>
+                <div class="detail-card-field">
+                    <div class="detail-card-label">Varones</div>
+                    <div class="detail-card-value">${varones.toLocaleString()}</div>
+                </div>
+                <div class="detail-card-field">
+                    <div class="detail-card-label">Mujeres</div>
+                    <div class="detail-card-value">${mujeres.toLocaleString()}</div>
+                </div>
+            `;
+
+            card.classList.add('show');
+        }
+
+        /**
+         * Cierra la card flotante de detalles
+         */
+        function closeDetailCard() {
+            const card = document.getElementById('detailCard');
+            card.classList.remove('show');
+        }
+
+        /**
+         * Renderiza listado de establecimientos en el panel lateral
+         */
+        function renderList() {
+            const container = document.getElementById('establishmentsList');
+
+            if (filteredData.length === 0) {
+                container.innerHTML = '<div class="empty-state">No hay resultados</div>';
+                return;
+            }
+
+            container.innerHTML = filteredData.map(establishment => {
+                const matricula = establishment.matricula ? parseInt(establishment.matricula) : 0;
+
+                return `
+                    <div class="establishment-item" data-id="${establishment.establecimiento_id}">
+                        <div class="establishment-header">
+                            <div class="establishment-name">${establishment.establecimiento_nombre}</div>
+                            <div class="establishment-toggle">▶</div>
+                        </div>
+                        <div class="establishment-details">
+                            <div class="establishment-detail-item">
+                                <div class="detail-label">Municipio</div>
+                                <div class="detail-value">${establishment.municipio_nombre}</div>
+                            </div>
+                            <div class="establishment-detail-item">
+                                <div class="detail-label">Dirección</div>
+                                <div class="detail-value">${establishment.direccion || '-'}</div>
+                            </div>
+                            <div class="establishment-detail-item">
+                                <div class="detail-label">Nivel</div>
+                                <div class="detail-value">${establishment.nivel || '-'}</div>
+                            </div>
+                            <div class="establishment-detail-item">
+                                <div class="detail-label">Matrícula</div>
+                                <div class="detail-value">${matricula.toLocaleString()} estudiantes</div>
+                            </div>
+                            <div class="establishment-detail-item">
+                                <div class="detail-label">Varones / Mujeres</div>
+                                <div class="detail-value">${establishment.varones || '0'} / ${establishment.mujeres || '0'}</div>
+                            </div>
+                            <div class="establishment-detail-item">
+                                <div class="detail-label">Turno</div>
+                                <div class="detail-value">${establishment.turnos || '-'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Agrega listeners de click
+            document.querySelectorAll('.establishment-item').forEach(item => {
+                const toggle = item.querySelector('.establishment-toggle');
+                const details = item.querySelector('.establishment-details');
+
+                // Toggle para abrir/cerrar detalles
+                item.querySelector('.establishment-header').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    
+                    const isOpen = details.classList.contains('show');
+                    
+                    // Cierra otros items
+                    document.querySelectorAll('.establishment-details').forEach(d => {
+                        d.classList.remove('show');
+                    });
+                    document.querySelectorAll('.establishment-toggle').forEach(t => {
+                        t.classList.remove('open');
+                    });
+                    
+                    // Abre el actual si no estaba abierto
+                    if (!isOpen) {
+                        details.classList.add('show');
+                        toggle.classList.add('open');
+                    }
+                    
+                    item.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                });
+
+                // Click en el item para mostrar en el mapa
+                item.addEventListener('click', () => {
+                    const id = item.dataset.id;
+                    const establishment = filteredData.find(e => e.establecimiento_id === id);
+                    
+                    if (establishment) {
+                        const lat = parseFloat(establishment.latitud);
+                        const lng = parseFloat(establishment.longitud);
+                        
+                        // Encuentra y selecciona el marcador
+                        const marker = markersLayer.getLayers().find(m => 
+                            m.data && m.data.establecimiento_id === id
+                        );
+                        
+                        if (marker) {
+                            selectMarker(establishment, marker);
+                            map.setView([lat, lng], 14);
+                        }
+                    }
+                });
+            });
+        }
+
+        /**
+         * Actualiza estadísticas mostradas en el panel
+         */
+        function updateStats() {
+            // Total de establecimientos
+            document.getElementById('totalEstablishments').textContent = 
+                filteredData.length.toLocaleString();
+
+            // Matrícula total
+            const matriculaTotal = filteredData.reduce((sum, e) => {
+                return sum + (parseInt(e.matricula) || 0);
+            }, 0);
+            document.getElementById('totalMatricula').textContent = 
+                matriculaTotal.toLocaleString();
+
+            // Municipios únicos
+            const municipios = new Set(filteredData.map(e => e.municipio_nombre)).size;
+            document.getElementById('totalMunicipios').textContent = 
+                municipios.toLocaleString();
+        }
+
+        /**
+         * Aplica filtros basados en inputs del usuario
+         */
+        function applyFilters() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const municipio = document.getElementById('municipioSelect').value;
+
+            filteredData = allData.filter(row => {
+                const matchesSearch = row.establecimiento_nombre.toLowerCase().includes(searchTerm);
+                const matchesMunicipio = !municipio || row.municipio_nombre === municipio;
+
+                return matchesSearch && matchesMunicipio;
+            });
+
+            renderMap();
+            renderList();
+            updateStats();
+        }
+
+        /**
+         * Limpia todos los filtros
+         */
+        function resetFilters() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('municipioSelect').value = '';
+
+            filteredData = [...allData];
+            renderMap();
+            renderList();
+            updateStats();
+        }
+
+        /**
+         * EVENT LISTENERS
+         */
+        document.getElementById('applyFilters').addEventListener('click', applyFilters);
+        document.getElementById('resetFilters').addEventListener('click', resetFilters);
+
+        // Aplica filtros cuando presiona Enter en búsqueda
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') applyFilters();
+        });
+
+        // Aplica filtros automáticamente cuando cambia el municipio
+        document.getElementById('municipioSelect').addEventListener('change', applyFilters);
+
+        /**
+         * INICIALIZACIÓN
+         * Se ejecuta cuando la página carga
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            initMap();
+            loadData();
+        });
+
+        /**
+         * Genera y descarga el archivo Excel con formato de tabla
+         */
+        async function descargarExcel() {
+            // Verificar si hay datos cargados
+            if (!filteredData || filteredData.length === 0) {
+                alert('No hay datos disponibles para descargar.');
+                return;
+            }
+
+            // ¡NUEVA LÍNEA! Detecta si hay un municipio seleccionado para el nombre del archivo
+            const municipioSeleccionado = document.getElementById('municipioSelect').value;
+            const nombreArchivo = municipioSeleccionado ? `Mapa_Secundarios_${municipioSeleccionado}.xlsx` : 'Mapa_Secundarios_Primera_Sección.xlsx';
+
+            // 1. Crear el libro y la hoja de trabajo
+            const workbook = new ExcelJS.Workbook();
+            const worksheet = workbook.addWorksheet('Establecimientos');
+
+            // 2. Definir las columnas de manera ordenada y asignarles un ancho fijo
+            worksheet.columns = [
+                { header: 'Nombre del Establecimiento', key: 'establecimiento_nombre', width: 40 },
+                { header: 'Modalidad', key: 'modalidad', width: 25 },
+                { header: 'Dirección', key: 'direccion', width: 35 },
+                { header: 'Teléfono', key: 'telefono', width: 18 },
+                { header: 'Email', key: 'email', width: 30 },
+                { header: 'Matrícula Total', key: 'matricula', width: 15 },
+                { header: 'Varones', key: 'varones', width: 12 },
+                { header: 'Mujeres', key: 'mujeres', width: 12 }
+            ];
+
+            // 3. Cargar las filas procesando números para que Excel los reconozca como tal
+            filteredData.forEach(item => {
+                worksheet.addRow({
+                    establecimiento_nombre: item.establecimiento_nombre || '-',
+                    modalidad: item.modalidad || '-',
+                    direccion: item.direccion || '-',
+                    telefono: item.telefono || '-',
+                    email: item.email || '-',
+                    matricula: item.matricula ? parseInt(item.matricula) : 0,
+                    varones: item.varones ? parseInt(item.varones) : 0,
+                    mujeres: item.mujeres ? parseInt(item.mujeres) : 0
+                });
+            });
+
+            // 4. Formatear la fila de Encabezados (Fila 1)
+            const headerRow = worksheet.getRow(1);
+            headerRow.height = 25; // Darle un poco más de altura al encabezado
+            
+            headerRow.eachCell((cell) => {
+                cell.font = { name: 'Segoe UI', size: 11, bold: true, color: { argb: '000000' } };
+                cell.fill = {
+                    type: 'pattern',
+                    pattern: 'solid',
+                    fgColor: { argb: 'EFEFEF' } // Fondo Gris Claro
+                };
+                cell.alignment = { vertical: 'middle', horizontal: 'left' };
+            });
+
+            // 5. Aplicar formato de bordes marcados a todas las celdas (Tabla completa)
+            const bordeDelgado = {
+                style: 'thin',
+                color: { argb: 'CCCCCC' } // Color gris de cuadrícula estándar
+            };
+
+            worksheet.eachRow({ includeHeader: true }, function(row, rowNumber) {
+                row.eachCell({ includeEmpty: true }, function(cell) {
+                    // Aplicar bordes marcados en las 4 esquinas de cada celda
+                    cell.border = {
+                        top: bordeDelgado,
+                        left: bordeDelgado,
+                        bottom: bordeDelgado,
+                        right: bordeDelgado
+                    };
+
+                    // Si no es el encabezado, dar alineación vertical media
+                    if (rowNumber > 1) {
+                        cell.font = { name: 'Segoe UI', size: 10 };
+                        cell.alignment = { vertical: 'middle' };
+                        
+                        // Alinear a la derecha las columnas numéricas (columnas 6, 7 y 8)
+                        if (cell.col === 6 || cell.col === 7 || cell.col === 8) {
+                            cell.alignment = { vertical: 'middle', horizontal: 'right' };
+                            // El valor ya es numérico porque lo parseamos en el addRow, 
+                            // pero por las dudas lo aseguramos:
+                            cell.value = cell.value ? Number(cell.value) : 0; 
+                        }
+                    }
+                });
+            });
+
+            // 6. Escribir el buffer binario y disparar la descarga en el navegador
+            const buffer = await workbook.xlsx.writeBuffer();
+            const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            
+            const url = window.URL.createObjectURL(blob);
+            const anchor = document.createElement('a');
+            anchor.href = url;
+            
+            // MODIFICAR ESTA LÍNEA: Usa la variable dinámica en lugar del texto fijo
+            anchor.download = nombreArchivo; 
+            
+            anchor.click();
+            
+            // Limpieza de memoria
+            window.URL.revokeObjectURL(url);
+        }
+
+        // EVENT LISTENER PARA EL BOTÓN
+        document.getElementById('downloadExcel').addEventListener('click', descargarExcel);
+    </script>
+</body>
+</html>
